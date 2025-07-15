@@ -1,0 +1,7 @@
+requests
+flask
+python-dotenv
+gunicorn
+flask_cors
+boto3
+pyairtable
