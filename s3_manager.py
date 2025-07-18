@@ -79,6 +79,11 @@ class S3Manager:
     def upload_file_from_url(self, file_url, content_type, object_name=None):
         """Download a file from a URL, upload it to S3, and return a permalink."""
         try:
+            # Check file size first
+            file_size = self.get_file_size_from_url(file_url)
+            if file_size:
+                print(f"File size: {file_size} bytes ({self.convert_bytes_to_mb(file_size):.2f} MB)")
+
             # Download the file
             response = requests.get(file_url)
             if response.status_code != 200:
@@ -109,17 +114,56 @@ class S3Manager:
 
             # Generate permalink
             s3_url = f"https://{self.bucket_name}.s3.{self.s3.meta.region_name}.amazonaws.com/{object_name}"
-            return s3_url
+            return {
+                "permalink": s3_url,
+                "file_size": self.convert_bytes_to_mb(file_size) if file_size else None
+            }
         except Exception as e:
             raise Exception(f"Error uploading image to S3: {str(e)}")
     
     @staticmethod
+    def get_file_size_from_url(file_url):
+        """Get the file size from a URL without downloading the file."""
+        try:
+            response = requests.head(file_url)
+            if response.status_code == 200:
+                content_length = response.headers.get('Content-Length')
+                if content_length:
+                    return int(content_length)
+            return None
+        except Exception as e:
+            print(f"Could not get file size for {file_url}: {e}")
+            return None
+    
+    @staticmethod
     def process_file_name(file_url, object_name=None):
         """Process the image name from the URL."""
+
+        # if no object_name is provided, use the last part of the URL
         if object_name is None:
             object_name = file_url.split('/')[-1]
             if '?' in object_name:
                 object_name = object_name.split('?')[0]
-        return object_name
+            return object_name
 
+        # If object_name is provided, ensure it has the correct extension
+        else:
+            # Extract file extension from URL
+            url_filename = file_url.split('/')[-1]
+            if '?' in url_filename:
+                url_filename = url_filename.split('?')[0]
+            
+            # Get extension from URL
+            if '.' in url_filename:
+                extension = '.' + url_filename.split('.')[-1]
+                # Add extension to object_name if it doesn't already have one
+                if not object_name.endswith(extension) and '.' not in object_name:
+                    object_name += extension
+            
+            return object_name
+
+    @staticmethod
+    def convert_bytes_to_mb(byte_size):
+        """Convert bytes to megabytes."""
+        return byte_size / (1024 * 1024) if byte_size else 0
 
