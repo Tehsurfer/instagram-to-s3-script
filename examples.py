@@ -48,5 +48,16 @@ def test_airtable_csv_update():
     print(result)
 
 
+def test_create_s3_folder():
+    s3_manager = S3Manager(bucket_name=bucket_name)
+    folder_name = "test-folder/"
+
+    try:
+        folder_path = s3_manager.create_folder(folder_name)
+        print(f"Folder created successfully: {folder_path}")
+    except Exception as e:
+        print(f"Error creating folder: {str(e)}")
+
+
 if __name__ == "__main__":
-    test_s3_video_upload()
+    test_create_s3_folder()

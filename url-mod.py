@@ -10,10 +10,16 @@ class URLModifier:
     def __init__(self, csv_path, bucket_name):
         self.csv_path = csv_path
         self.new_csv_path = csv_path.replace('.csv', '-updated.csv')
+        self.new_video_csv_path = csv_path.replace('.csv', '-all-updated.csv')
         self.bucket_name = bucket_name
         self.s3_manager = S3Manager(bucket_name)
         load_dotenv()
 
+    def set_s3_folder(self, folder_name):
+        """Set the S3 folder path for uploads."""
+        self.s3_manager.set_folder(folder_name)
+        print(f"S3 folder set to: {self.s3_manager.folder}")
+        
     def update_image_urls(self):
         with open(self.csv_path, "r", encoding="utf-8") as csv_file:
             reader = csv.DictReader(csv_file)
@@ -52,17 +58,20 @@ class URLModifier:
                 except Exception as e:
                     print(f"Failed to upload {video_url}: {e}")
 
-        new_video_csv_path = self.csv_path.replace('-updated.csv', '-all-updated.csv')
-        with open(new_video_csv_path, "w", newline="", encoding="utf-8") as csv_file:
+        with open(self.new_video_csv_path, "w", newline="", encoding="utf-8") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(rows)
-        print(f"Updated video URLs in {new_video_csv_path} to point to S3 bucket {self.bucket_name}")
+        print(f"Updated video URLs in {self.new_video_csv_path} to point to S3 bucket {self.bucket_name}")
 
 if __name__ == "__main__":
     csv_path = "data/nutrition-school-scrape-updated.csv"
     bucket_name = "instagram-files-permalink"
+    folder_name = "nutrition-school-scrape/"
 
+    
     url_modifier = URLModifier(csv_path, bucket_name)
+    url_modifier.set_s3_folder(folder_name)
+    
     #url_modifier.update_image_urls() # I did these one at a time
     url_modifier.update_video_urls()
