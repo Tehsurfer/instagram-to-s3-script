@@ -12,7 +12,7 @@ class URLModifier:
         self.new_csv_path = csv_path.replace('.csv', '-updated.csv')
         self.bucket_name = bucket_name
         self.s3_manager = S3Manager(bucket_name)
-        self.max_total_uploads_in_bytes = 5 * 1024 * 1024 * 1024  # 5 GB
+        self.max_total_uploads_in_bytes = 40 * 1024 * 1024 * 1024  # X GB
         self.current_total_uploads_in_bytes = 0
         self.file_number = 1
         load_dotenv()
@@ -86,3 +86,4 @@ if __name__ == "__main__":
     url_modifier.update_urls_for_column("imgUrl", "image/jpeg", update_file_path="data/nutrition-school-scrape-img-updated.csv")
     url_modifier.set_csv_source("data/nutrition-school-scrape-all.csv")
     url_modifier.update_urls_for_column("videoUrl", "video/mp4", update_file_path="data/nutrition-school-scrape-all-updated.csv")
+    print(f"Total uploads size ended up at: {url_modifier.current_total_uploads_in_bytes / (1024 * 1024):.2f} MB")
